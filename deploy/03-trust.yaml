@@ -1,0 +1,465 @@
+---
+# Source: cert-manager-trust/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cert-manager-trust
+  labels:
+    app.kubernetes.io/name: cert-manager-trust
+    helm.sh/chart: cert-manager-trust-v0.1.1
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: cert-manager-trust/templates/trust.cert-manager.io_bundles.yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.6.1
+  creationTimestamp: null
+  name: bundles.trust.cert-manager.io
+spec:
+  group: trust.cert-manager.io
+  names:
+    kind: Bundle
+    listKind: BundleList
+    plural: bundles
+    singular: bundle
+  scope: Cluster
+  versions:
+    - additionalPrinterColumns:
+        - description: Bundle Target Key
+          jsonPath: .status.target.configMap.key
+          name: Target
+          type: string
+        - description: Bundle has been synced
+          jsonPath: .status.conditions[?(@.type == "Synced")].status
+          name: Synced
+          type: string
+        - description: Reason Bundle has Synced status
+          jsonPath: .status.conditions[?(@.type == "Synced")].reason
+          name: Reason
+          type: string
+        - description: Timestamp Bundle was created
+          jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - spec
+          properties:
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: Desired state of the Bundle resource.
+              type: object
+              required:
+                - sources
+                - target
+              properties:
+                sources:
+                  description: Sources is a set of references to data whose data will sync to the target.
+                  type: array
+                  items:
+                    description: BundleSource is the set of sources whose data will be appended and synced to the BundleTarget in all Namespaces.
+                    type: object
+                    properties:
+                      configMap:
+                        description: ConfigMap is a reference to a ConfigMap's `data` key, in the trust Namespace.
+                        type: object
+                        required:
+                          - key
+                          - name
+                        properties:
+                          key:
+                            description: Key is the key of the entry in the object's `data` field to be used.
+                            type: string
+                          name:
+                            description: Name is the name of the source object in the trust Namespace.
+                            type: string
+                      inLine:
+                        description: InLine is a simple string to append as the source data.
+                        type: string
+                      secret:
+                        description: Secret is a reference to a Secrets's `data` key, in the trust Namespace.
+                        type: object
+                        required:
+                          - key
+                          - name
+                        properties:
+                          key:
+                            description: Key is the key of the entry in the object's `data` field to be used.
+                            type: string
+                          name:
+                            description: Name is the name of the source object in the trust Namespace.
+                            type: string
+                target:
+                  description: Target is the target location in all namespaces to sync source data to.
+                  type: object
+                  properties:
+                    configMap:
+                      description: ConfigMap is the target ConfigMap in all Namespaces that all Bundle source data will be synced to.
+                      type: object
+                      required:
+                        - key
+                      properties:
+                        key:
+                          description: Key is the key of the entry in the object's `data` field to be used.
+                          type: string
+            status:
+              description: Status of the Bundle. This is set and managed automatically.
+              type: object
+              properties:
+                conditions:
+                  description: List of status conditions to indicate the status of the Bundle. Known condition types are `Bundle`.
+                  type: array
+                  items:
+                    description: BundleCondition contains condition information for a Bundle.
+                    type: object
+                    required:
+                      - status
+                      - type
+                    properties:
+                      lastTransitionTime:
+                        description: LastTransitionTime is the timestamp corresponding to the last status change of this condition.
+                        type: string
+                        format: date-time
+                      message:
+                        description: Message is a human readable description of the details of the last transition, complementing reason.
+                        type: string
+                      observedGeneration:
+                        description: If set, this represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.condition[x].observedGeneration is 9, the condition is out of date with respect to the current state of the Bundle.
+                        type: integer
+                        format: int64
+                      reason:
+                        description: Reason is a brief machine readable explanation for the condition's last transition.
+                        type: string
+                      status:
+                        description: Status of the condition, one of ('True', 'False', 'Unknown').
+                        type: string
+                      type:
+                        description: Type of the condition, known values are (`Synced`).
+                        type: string
+                target:
+                  description: Target is the current Target that the Bundle is attempting or has completed syncing the source data to.
+                  type: object
+                  properties:
+                    configMap:
+                      description: ConfigMap is the target ConfigMap in all Namespaces that all Bundle source data will be synced to.
+                      type: object
+                      required:
+                        - key
+                      properties:
+                        key:
+                          description: Key is the key of the entry in the object's `data` field to be used.
+                          type: string
+      served: true
+      storage: true
+      subresources:
+        status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
+# Source: cert-manager-trust/templates/clusterrole.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+    app.kubernetes.io/name: cert-manager-trust
+    helm.sh/chart: cert-manager-trust-v0.1.1
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+  name: cert-manager-trust
+rules:
+- apiGroups:
+  - "trust.cert-manager.io"
+  resources:
+  - "bundles"
+  verbs: ["get", "list", "watch"]
+- apiGroups:
+  - "trust.cert-manager.io"
+  resources:
+  - "bundles/status"
+  verbs: ["update"]
+
+- apiGroups:
+  - ""
+  resources:
+  - "configmaps"
+  verbs: ["get", "list", "create", "update", "watch"]
+- apiGroups:
+  - ""
+  resources:
+  - "namespaces"
+  verbs: ["get", "list", "watch"]
+
+- apiGroups:
+  - ""
+  resources:
+  - "events"
+  verbs: ["create", "patch"]
+---
+# Source: cert-manager-trust/templates/clusterrolebinding.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+    app.kubernetes.io/name: cert-manager-trust
+    helm.sh/chart: cert-manager-trust-v0.1.1
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+  name: cert-manager-trust
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cert-manager-trust
+subjects:
+- kind: ServiceAccount
+  name: cert-manager-trust
+  namespace: cert-manager
+---
+# Source: cert-manager-trust/templates/role.yaml
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cert-manager-trust
+  labels:
+    app.kubernetes.io/name: cert-manager-trust
+    helm.sh/chart: cert-manager-trust-v0.1.1
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - "secrets"
+  verbs:
+  - "get"
+  - "list"
+  - "watch"
+- apiGroups:
+  - "coordination.k8s.io"
+  resources:
+  - "leases"
+  verbs:
+  - "get"
+  - "create"
+  - "update"
+  - "watch"
+  - "list"
+---
+# Source: cert-manager-trust/templates/rolebinding.yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cert-manager-trust
+  labels:
+    app.kubernetes.io/name: cert-manager-trust
+    helm.sh/chart: cert-manager-trust-v0.1.1
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cert-manager-trust
+subjects:
+- kind: ServiceAccount
+  name: cert-manager-trust
+  namespace: cert-manager
+---
+# Source: cert-manager-trust/templates/metrics-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cert-manager-trust-metrics
+  labels:
+    app: cert-manager-trust
+    app.kubernetes.io/name: cert-manager-trust
+    helm.sh/chart: cert-manager-trust-v0.1.1
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9402
+      targetPort: 9402
+      protocol: TCP
+      name: metrics
+  selector:
+    app: cert-manager-trust
+---
+# Source: cert-manager-trust/templates/webhook.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cert-manager-trust
+  labels:
+    app: cert-manager-trust
+    app.kubernetes.io/name: cert-manager-trust
+    helm.sh/chart: cert-manager-trust-v0.1.1
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 443
+      targetPort: 6443
+      protocol: TCP
+      name: webhook
+  selector:
+    app: cert-manager-trust
+---
+# Source: cert-manager-trust/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cert-manager-trust
+  labels:
+    app.kubernetes.io/name: cert-manager-trust
+    helm.sh/chart: cert-manager-trust-v0.1.1
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cert-manager-trust
+  template:
+    metadata:
+      labels:
+        app: cert-manager-trust
+    spec:
+      serviceAccountName: cert-manager-trust
+      containers:
+      - name: cert-manager-trust
+        image: "quay.io/jetstack/cert-manager-trust:v0.1.0"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 6443
+        - containerPort: 9402
+        readinessProbe:
+          httpGet:
+            port: 6060
+            path: /readyz
+          initialDelaySeconds: 3
+          periodSeconds: 7
+        command: ["cert-manager-trust"]
+        args:
+          - "--log-level=1"
+          - "--metrics-port=9402"
+          - "--readiness-probe-port=6060"
+          - "--readiness-probe-path=/readyz"
+
+            # trust
+          - "--trust-namespace=cert-manager"
+
+            # webhook
+          - "--webhook-host=0.0.0.0"
+          - "--webhook-port=6443"
+          - "--webhook-certificate-dir=/tls"
+
+
+        volumeMounts:
+        - mountPath: /tls
+          name: tls
+          readOnly: true
+
+        resources:
+            {}
+
+      volumes:
+      - name: tls
+        secret:
+          defaultMode: 420
+          secretName: cert-manager-trust-tls
+---
+# Source: cert-manager-trust/templates/certificate.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: cert-manager-trust
+  labels:
+    app.kubernetes.io/name: cert-manager-trust
+    helm.sh/chart: cert-manager-trust-v0.1.1
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  dnsNames:
+  - "cert-manager-trust.cert-manager.svc"
+  secretName: cert-manager-trust-tls
+  revisionHistoryLimit: 1
+  issuerRef:
+    name: cert-manager-trust
+---
+# Source: cert-manager-trust/templates/certificate.yaml
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: cert-manager-trust
+  labels:
+    app.kubernetes.io/name: cert-manager-trust
+    helm.sh/chart: cert-manager-trust-v0.1.1
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selfSigned: {}
+---
+# Source: cert-manager-trust/templates/webhook.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: cert-manager-trust
+  labels:
+    app: cert-manager-trust
+    app.kubernetes.io/name: cert-manager-trust
+    helm.sh/chart: cert-manager-trust-v0.1.1
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.1.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    cert-manager.io/inject-ca-from: "cert-manager/cert-manager-trust"
+
+webhooks:
+  - name: trust.cert-manager.io
+    rules:
+      - apiGroups:
+          - "trust.cert-manager.io"
+        apiVersions:
+          - "*"
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - "*/*"
+    admissionReviewVersions: ["v1", "v1beta1"]
+    timeoutSeconds: 5
+    failurePolicy: Fail
+    sideEffects: None
+    clientConfig:
+      service:
+        name: cert-manager-trust
+        namespace: "cert-manager"
+        path: /validate

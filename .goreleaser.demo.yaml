@@ -1,0 +1,47 @@
+project_name: spiffe-demo
+before:
+  hooks:
+    - go mod tidy
+    - go test -v ./...
+builds:
+  - id: spiffe-demo-server
+    main: ./internal/cmd/server
+    binary: spiffe-demo-server
+    env:
+      - CGO_ENABLED=0
+    targets:
+      - linux_$ARCH
+  - id: spiffe-demo-client
+    main: ./internal/cmd/client
+    binary: spiffe-demo-client
+    env:
+      - CGO_ENABLED=0
+    targets:
+      - linux_$ARCH
+archives:
+  - format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE
+dockers:
+  - id: server-$ARCH
+    goarch: $ARCH
+    image_templates:
+      - jetstack/spiffe-demo-server:{{ .Env.VERSION }}-$ARCH
+    use: buildx
+    dockerfile: internal/cmd/server/Dockerfile
+  - id: client-$ARCH
+    goarch: $ARCH
+    image_templates:
+      - jetstack/spiffe-demo-client:{{ .Env.VERSION }}-$ARCH
+    use: buildx
+    dockerfile: internal/cmd/client/Dockerfile
+docker_manifests:
+  - name_template: jetstack/spiffe-demo-server:{{ .Env.VERSION }}
+    image_templates:
+      - jetstack/spiffe-demo-server:{{ .Env.VERSION }}-$ARCH
+  - name_template: jetstack/spiffe-demo-client:{{ .Env.VERSION }}
+    image_templates:
+      - jetstack/spiffe-demo-client:{{ .Env.VERSION }}-$ARCH

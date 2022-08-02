@@ -1,0 +1,2 @@
+demo:
+	./hack/demo.sh

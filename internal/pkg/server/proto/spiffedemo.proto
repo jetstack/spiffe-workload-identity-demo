@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/jetstack/spiffe-demo/internal/pkg/server/proto;proto";
+
+service SpiffeDemo {
+  rpc HelloWorld(google.protobuf.Empty) returns (HelloWorldResponse);
+}
+
+message HelloWorldResponse {
+  string Message = 1;
+}

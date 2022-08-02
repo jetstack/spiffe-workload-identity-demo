@@ -1,0 +1,14 @@
+apiVersion: trust.cert-manager.io/v1alpha1
+kind: Bundle
+metadata:
+  name: demo-jetstack-net
+spec:
+  sources:
+  - secret:
+      name: "root-secret"
+      key: "ca.crt"
+  target:
+    # Data synced to the ConfigMap `my-org.com` at the key `root-certs.pem` in
+    # every namespace.
+    configMap:
+      key: "ca.crt"

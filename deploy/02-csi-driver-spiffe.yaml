@@ -1,0 +1,370 @@
+---
+# Source: cert-manager-csi-driver-spiffe/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/name: cert-manager-csi-driver-spiffe
+    helm.sh/chart: cert-manager-csi-driver-spiffe-v0.2.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.2.0"
+    app.kubernetes.io/managed-by: Helm
+  name: cert-manager-csi-driver-spiffe
+---
+# Source: cert-manager-csi-driver-spiffe/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/name: cert-manager-csi-driver-spiffe
+    helm.sh/chart: cert-manager-csi-driver-spiffe-v0.2.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.2.0"
+    app.kubernetes.io/managed-by: Helm
+  name: cert-manager-csi-driver-spiffe-approver
+---
+# Source: cert-manager-csi-driver-spiffe/templates/clusterrole.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+    app.kubernetes.io/name: cert-manager-csi-driver-spiffe
+    helm.sh/chart: cert-manager-csi-driver-spiffe-v0.2.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.2.0"
+    app.kubernetes.io/managed-by: Helm
+  name: cert-manager-csi-driver-spiffe
+rules:
+  - apiGroups: ["cert-manager.io"]
+    resources: ["certificaterequests"]
+    verbs: ["watch", "create", "delete", "list"]
+---
+# Source: cert-manager-csi-driver-spiffe/templates/clusterrole.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+    app.kubernetes.io/name: cert-manager-csi-driver-spiffe
+    helm.sh/chart: cert-manager-csi-driver-spiffe-v0.2.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.2.0"
+    app.kubernetes.io/managed-by: Helm
+  name: cert-manager-csi-driver-spiffe-approver
+rules:
+  - apiGroups: ["cert-manager.io"]
+    resources: ["certificaterequests"]
+    verbs: ["list", "watch"]
+  - apiGroups: ["cert-manager.io"]
+    resources: ["certificaterequests/status"]
+    verbs: ["update"]
+
+  - apiGroups: ["cert-manager.io"]
+    resources: ["signers"]
+    verbs: ["approve"]
+    resourceNames: ["clusterissuers.cert-manager.io/*"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+---
+# Source: cert-manager-csi-driver-spiffe/templates/clusterrolebinding.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+    app.kubernetes.io/name: cert-manager-csi-driver-spiffe
+    helm.sh/chart: cert-manager-csi-driver-spiffe-v0.2.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.2.0"
+    app.kubernetes.io/managed-by: Helm
+  name: cert-manager-csi-driver-spiffe
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cert-manager-csi-driver-spiffe
+subjects:
+  - kind: ServiceAccount
+    name: cert-manager-csi-driver-spiffe
+    namespace: cert-manager
+---
+# Source: cert-manager-csi-driver-spiffe/templates/clusterrolebinding.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+    app.kubernetes.io/name: cert-manager-csi-driver-spiffe
+    helm.sh/chart: cert-manager-csi-driver-spiffe-v0.2.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.2.0"
+    app.kubernetes.io/managed-by: Helm
+  name: cert-manager-csi-driver-spiffe-approver
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cert-manager-csi-driver-spiffe-approver
+subjects:
+  - kind: ServiceAccount
+    name: cert-manager-csi-driver-spiffe-approver
+    namespace: cert-manager
+---
+# Source: cert-manager-csi-driver-spiffe/templates/role.yaml
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cert-manager-csi-driver-spiffe-approver
+  labels:
+    app.kubernetes.io/name: cert-manager-csi-driver-spiffe
+    helm.sh/chart: cert-manager-csi-driver-spiffe-v0.2.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.2.0"
+    app.kubernetes.io/managed-by: Helm
+rules:
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "update", "create"]
+---
+# Source: cert-manager-csi-driver-spiffe/templates/rolebinding.yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cert-manager-csi-driver-spiffe-approver
+  labels:
+    app.kubernetes.io/name: cert-manager-csi-driver-spiffe
+    helm.sh/chart: cert-manager-csi-driver-spiffe-v0.2.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.2.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cert-manager-csi-driver-spiffe-approver
+subjects:
+  - kind: ServiceAccount
+    name: cert-manager-csi-driver-spiffe-approver
+    namespace: cert-manager
+---
+# Source: cert-manager-csi-driver-spiffe/templates/metrics-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cert-manager-csi-driver-spiffe-approver-metrics
+  labels:
+    app: cert-manager-csi-driver-spiffe-approver
+    app.kubernetes.io/name: cert-manager-csi-driver-spiffe
+    helm.sh/chart: cert-manager-csi-driver-spiffe-v0.2.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.2.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9402
+      targetPort: 9402
+      protocol: TCP
+      name: metrics
+  selector:
+    app: cert-manager-csi-driver-spiffe-approver
+---
+# Source: cert-manager-csi-driver-spiffe/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cert-manager-csi-driver-spiffe
+  labels:
+    app.kubernetes.io/name: cert-manager-csi-driver-spiffe
+    helm.sh/chart: cert-manager-csi-driver-spiffe-v0.2.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.2.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    matchLabels:
+      app: cert-manager-csi-driver-spiffe
+  template:
+    metadata:
+      labels:
+        app: cert-manager-csi-driver-spiffe
+    spec:
+      serviceAccountName: cert-manager-csi-driver-spiffe
+      containers:
+
+        - name: node-driver-registrar
+          image: "k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.5.0"
+          imagePullPolicy: IfNotPresent
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "rm -rf /registration/cert-manager-csi-driver-spiffe /registration/cert-manager-csi-driver-spiffe-reg.sock"]
+          args:
+            - -v=1
+            - --csi-address=/plugin/csi.sock
+            - --kubelet-registration-path=/var/lib/kubelet/plugins/cert-manager-csi-driver-spiffe/csi.sock
+          env:
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /plugin
+            - name: registration-dir
+              mountPath: /registration
+
+        - name: liveness-probe
+          image: "k8s.gcr.io/sig-storage/livenessprobe:v2.6.0"
+          args:
+            - --csi-address=/plugin/csi.sock
+            - --probe-timeout=3s
+            - --health-port=9809
+            - -v=1
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /plugin
+
+        - name: cert-manager-csi-driver-spiffe
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
+            allowPrivilegeEscalation: true
+          image: "quay.io/jetstack/cert-manager-csi-driver-spiffe:v0.2.0"
+          imagePullPolicy: IfNotPresent
+          args :
+            - --log-level=1
+
+            - --certificate-request-duration=1h
+            - --issuer-name=trust-domain-root
+            - --issuer-kind=ClusterIssuer
+            - --issuer-group=cert-manager.io
+            - --trust-domain=demo.jetstack.net
+
+            - --file-name-certificate=tls.crt
+            - --file-name-key=tls.key
+            - --file-name-ca=ca.crt
+            - --source-ca-bundle=/var/run/secrets/spiffe.io/ca.crt
+
+            - --node-id=$(NODE_ID)
+            - --endpoint=$(CSI_ENDPOINT)
+            - --data-root=csi-data-dir
+          env:
+            - name: NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: CSI_ENDPOINT
+              value: unix://plugin/csi.sock
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /plugin
+            - name: pods-mount-dir
+              mountPath: /var/lib/kubelet/pods
+              mountPropagation: "Bidirectional"
+            - name: csi-data-dir
+              mountPath: /csi-data-dir
+            - name: trust-domain-roots
+              mountPath: /var/run/secrets/spiffe.io
+          ports:
+            - containerPort: 9809
+              name: healthz
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: healthz
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+          resources:
+            {}
+
+      volumes:
+        - name: plugin-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins/cert-manager-csi-driver-spiffe
+            type: DirectoryOrCreate
+        - name: pods-mount-dir
+          hostPath:
+            path: /var/lib/kubelet/pods
+            type: Directory
+        - hostPath:
+            path: /var/lib/kubelet/plugins_registry
+            type: Directory
+          name: registration-dir
+        - hostPath:
+            path: /tmp/cert-manager-csi-driver-spiffe
+            type: DirectoryOrCreate
+          name: csi-data-dir
+        - name: trust-domain-roots
+          configMap:
+            name: demo-jetstack-net
+            items:
+              - key: ca.crt
+                path: ca.crt
+---
+# Source: cert-manager-csi-driver-spiffe/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cert-manager-csi-driver-spiffe-approver
+  labels:
+    app.kubernetes.io/name: cert-manager-csi-driver-spiffe
+    helm.sh/chart: cert-manager-csi-driver-spiffe-v0.2.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.2.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cert-manager-csi-driver-spiffe-approver
+  template:
+    metadata:
+      labels:
+        app: cert-manager-csi-driver-spiffe-approver
+    spec:
+      serviceAccountName: cert-manager-csi-driver-spiffe-approver
+      containers:
+        - name: cert-manager-csi-driver-spiffe-approver
+          image: "quay.io/jetstack/cert-manager-csi-driver-spiffe-approver:v0.2.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9402
+          readinessProbe:
+            httpGet:
+              port: 6060
+              path: "/readyz"
+            initialDelaySeconds: 3
+            periodSeconds: 7
+          args:
+            - --log-level=1
+            - --csi-driver-name=spiffe.csi.cert-manager.io
+
+            - --certificate-request-duration=1h
+            - --issuer-name=trust-domain-root
+            - --issuer-kind=ClusterIssuer
+            - --issuer-group=cert-manager.io
+            - --trust-domain=demo.jetstack.net
+
+            - --leader-election-namespace=cert-manager
+            - "--metrics-bind-address=:9402"
+            - "--readiness-probe-bind-address=:6060"
+          resources:
+            {}
+---
+# Source: cert-manager-csi-driver-spiffe/templates/csidriver.yaml
+apiVersion: storage.k8s.io/v1
+kind: CSIDriver
+metadata:
+  name: "spiffe.csi.cert-manager.io"
+  labels:
+    app.kubernetes.io/name: cert-manager-csi-driver-spiffe
+    helm.sh/chart: cert-manager-csi-driver-spiffe-v0.2.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "v0.2.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  podInfoOnMount: true
+  volumeLifecycleModes:
+    - Ephemeral
+  tokenRequests:
+    - audience: ""
+      expirationSeconds: 3600
+  requiresRepublish: true

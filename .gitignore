@@ -1,0 +1,6 @@
+*.pem
+test.yaml
+dist/
+.goreleaser.demo.*.yaml
+cacert.pem
+etag.txt
